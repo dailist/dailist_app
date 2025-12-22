@@ -18,7 +18,8 @@ COPY . .
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Install dependencies (production)
-RUN composer install --no-dev --optimize-autoloader
+RUN composer config -g process-timeout 2000 \
+ && composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
 
 # Permission untuk Laravel
 RUN chown -R www-data:www-data storage bootstrap/cache
