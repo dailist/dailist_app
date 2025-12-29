@@ -33,4 +33,6 @@
             </main>
         </div>
     </body>
+    {{-- Render pushed scripts (e.g. Chart.js initializers) --}}
+    @stack('scripts')
 </html>

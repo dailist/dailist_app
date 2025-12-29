@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Models\Transaction;
 use App\Models\Subscription;
 use App\Models\Task;
+use App\Models\Visit;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -13,7 +15,9 @@ class AdminController extends Controller
     public function dashboard()
     {
         // Check if user is admin
-        if (!auth()->user()->isAdmin()) {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (! $user || ! $user->isAdmin()) {
             abort(403, 'Unauthorized access');
         }
 
@@ -45,13 +49,33 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return view('admin.dashboard', compact('stats', 'recentTransactions', 'users'));
+        // Visitor stats for last 14 days
+        $visitRows = Visit::where('created_at', '>=', now()->subDays(14))
+            ->selectRaw("DATE(created_at) as date, count(*) as count")
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->pluck('count', 'date')
+            ->toArray();
+
+        // Build labels and data for the last 14 days
+        $labels = [];
+        $data = [];
+        for ($i = 13; $i >= 0; $i--) {
+            $day = now()->subDays($i)->toDateString();
+            $labels[] = date('M d', strtotime($day));
+            $data[] = $visitRows[$day] ?? 0;
+        }
+
+        return view('admin.dashboard', compact('stats', 'recentTransactions', 'users', 'labels', 'data'));
     }
 
     public function users(Request $request)
     {
         // Check if user is admin
-        if (!auth()->user()->isAdmin()) {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (! $user || ! $user->isAdmin()) {
             abort(403, 'Unauthorized access');
         }
 
@@ -86,7 +110,9 @@ class AdminController extends Controller
     public function transactions(Request $request)
     {
         // Check if user is admin
-        if (!auth()->user()->isAdmin()) {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (! $user || ! $user->isAdmin()) {
             abort(403, 'Unauthorized access');
         }
 

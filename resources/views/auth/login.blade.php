@@ -44,6 +44,13 @@
             </x-primary-button>
         </div>
 
+        <div class="flex items-center justify-center mt-4">
+            <a href="{{ route('google.redirect') }}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" class="me-2 h-4 w-4">
+                {{ __('Continue with Google') }}
+            </a>
+        </div>
+
         <div class="text-center mt-4">
             <span class="text-sm text-gray-600">Don't have an account?</span>
             <a href="{{ route('register') }}" class="text-sm text-indigo-600 hover:text-indigo-800 font-semibold underline">

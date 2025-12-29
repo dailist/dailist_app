@@ -5,6 +5,7 @@
                 <h2 class="font-bold text-2xl text-gray-800">Admin Dashboard</h2>
                 <p class="text-sm text-gray-600 mt-1">Monitor users, subscriptions, and revenue</p>
             </div>
+
             <span class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg font-semibold text-sm">
                 👑 Admin Panel
             </span>
@@ -101,6 +102,14 @@
                     <p class="text-sm mt-1" style="color: rgba(255, 255, 255, 0.9);">Monthly Revenue</p>
                 </div>
 
+            </div>
+
+            {{-- Visitor Chart (moved below statistics) --}}
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-lg text-gray-900">Website Visitors (last 14 days)</h3>
+                </div>
+                <canvas id="visitorChart" height="120"></canvas>
             </div>
 
             {{-- Quick Links --}}
@@ -267,3 +276,38 @@
         </div>
     </div>
 </x-app-layout>
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        (function () {
+            const ctx = document.getElementById('visitorChart');
+            if (!ctx) return;
+
+            const labels = @json($labels ?? []);
+            const data = @json($data ?? []);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Visitors',
+                        data: data,
+                        fill: true,
+                        backgroundColor: 'rgba(99,102,241,0.08)',
+                        borderColor: 'rgba(99,102,241,1)',
+                        tension: 0.25,
+                        pointRadius: 3,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        })();
+    </script>
+@endpush
