@@ -109,7 +109,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-bold text-lg text-gray-900">Website Visitors (last 14 days)</h3>
                 </div>
-                <canvas id="visitorChart" height="120"></canvas>
+                <canvas id="visitorChart" height="120" data-labels='@json($labels ?? [])' data-values='@json($data ?? [])'></canvas>
             </div>
 
             {{-- Quick Links --}}
@@ -277,37 +277,25 @@
     </div>
 </x-app-layout>
 
+{{-- Chart diinisialisasi oleh `resources/js/app.js` menggunakan chart.js dari bundel --}}
+
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        (function () {
-            const ctx = document.getElementById('visitorChart');
-            if (!ctx) return;
-
-            const labels = @json($labels ?? []);
-            const data = @json($data ?? []);
-
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Visitors',
-                        data: data,
-                        fill: true,
-                        backgroundColor: 'rgba(99,102,241,0.08)',
-                        borderColor: 'rgba(99,102,241,1)',
-                        tension: 0.25,
-                        pointRadius: 3,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
+<script>
+    try {
+        console.log('Visitor chart debug: element=', document.getElementById('visitorChart'));
+        fetch('/admin/visits-data', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(async (res) => {
+                console.log('visits-data status:', res.status);
+                try {
+                    const json = await res.json();
+                    console.log('visits-data json:', json);
+                } catch (err) {
+                    console.error('visits-data json parse error', err);
                 }
-            });
-        })();
-    </script>
+            })
+            .catch(err => console.error('visits-data fetch error', err));
+    } catch (e) {
+        console.error('Visitor chart debug error', e);
+    }
+</script>
 @endpush

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Midtrans\Config;
 use Midtrans\Snap;
 
@@ -25,7 +27,8 @@ class SubscriptionController extends Controller
 
     public function upgrade()
     {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
 
         // Cek apakah user sudah premium
         if ($user->isPremium()) {
@@ -38,7 +41,8 @@ class SubscriptionController extends Controller
 
     public function createPayment(Request $request)
     {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
 
         // Cek apakah user sudah premium
         if ($user->isPremium()) {
@@ -58,7 +62,7 @@ class SubscriptionController extends Controller
 
         // Prepare transaction details for Midtrans
         $params = [
-            'transaction_details' => [
+                'transaction_details' => [
                 'order_id' => $orderId,
                 'gross_amount' => 50000,
             ],
@@ -208,7 +212,8 @@ class SubscriptionController extends Controller
 
     public function cancel()
     {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
         $subscription = $user->subscription;
 
         if (!$subscription || $subscription->plan_type !== 'premium') {
@@ -225,7 +230,7 @@ class SubscriptionController extends Controller
 
     public function continuePayment($transactionId)
     {
-        $transaction = auth()->user()->transactions()->findOrFail($transactionId);
+        $transaction = Transaction::where('user_id', Auth::id())->where('id', $transactionId)->firstOrFail();
 
         if ($transaction->status !== 'pending') {
             return redirect()->route('dashboard')->with('error', 'Transaksi ini sudah tidak dalam status pending.');
@@ -240,7 +245,7 @@ class SubscriptionController extends Controller
 
     public function cancelTransaction($transactionId)
     {
-        $transaction = auth()->user()->transactions()->findOrFail($transactionId);
+        $transaction = Transaction::where('user_id', Auth::id())->where('id', $transactionId)->firstOrFail();
 
         if ($transaction->status !== 'pending') {
             return redirect()->route('dashboard')->with('error', 'Transaksi ini sudah tidak dalam status pending.');

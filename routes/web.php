@@ -6,6 +6,15 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 
+// Temporary debug route — returns visit count and sample rows (remove in production)
+Route::get('/debug/visits-count', function () {
+    if (!app()->environment('local') && ! request()->ip() === '127.0.0.1') {
+        abort(404);
+    }
+    $visits = \App\Models\Visit::orderBy('created_at', 'desc')->take(10)->get();
+    return response()->json(['count' => \App\Models\Visit::count(), 'sample' => $visits]);
+});
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -33,10 +42,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/subscription/cancel-transaction/{id}', [SubscriptionController::class, 'cancelTransaction'])->name('subscription.cancel-transaction');
 
     // Admin routes
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware([\App\Http\Middleware\EnsureAdmin::class])->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::get('/transactions', [AdminController::class, 'transactions'])->name('transactions');
+        Route::get('/visits-data', [AdminController::class, 'visitsData'])->name('visits.data');
     });
 });
 

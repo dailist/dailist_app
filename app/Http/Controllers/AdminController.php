@@ -129,4 +129,47 @@ class AdminController extends Controller
 
         return view('admin.transactions', compact('transactions', 'totalRevenue'));
     }
+
+    /**
+     * Return visitor labels and data for the last 14 days as JSON.
+     */
+    public function visitsData(Request $request)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (! $user || ! $user->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // metric: total | unique_ip | unique_user
+        $metric = $request->query('metric', 'unique_ip');
+
+        if ($metric === 'total') {
+            $select = "DATE(created_at) as date, count(*) as count";
+        } elseif ($metric === 'unique_user') {
+            // count distinct user_id (only counts logged-in users)
+            $select = "DATE(created_at) as date, COUNT(DISTINCT user_id) as count";
+        } else {
+            // default: unique by ip (counts anonymous visitors by IP)
+            $select = "DATE(created_at) as date, COUNT(DISTINCT ip) as count";
+        }
+
+        $visitRows = Visit::where('created_at', '>=', now()->subDays(14))
+            ->selectRaw($select)
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->pluck('count', 'date')
+            ->toArray();
+
+        $labels = [];
+        $data = [];
+        for ($i = 13; $i >= 0; $i--) {
+            $day = now()->subDays($i)->toDateString();
+            $labels[] = date('M d', strtotime($day));
+            $data[] = $visitRows[$day] ?? 0;
+        }
+
+        return response()->json(['labels' => $labels, 'data' => $data]);
+    }
 }
