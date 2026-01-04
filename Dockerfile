@@ -27,6 +27,17 @@ RUN composer config -g repo.packagist.org composer https://repo.packagist.org \
  && composer config -g process-timeout 2000 \
  && composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction --no-progress
 
+# Konfigurasi Apache DocumentRoot ke folder public
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Install Node.js & Build Frontend (Vite)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install \
+    && npm run build
+
 # Permission untuk Laravel
 RUN chown -R www-data:www-data storage bootstrap/cache
 
