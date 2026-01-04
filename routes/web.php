@@ -15,18 +15,7 @@ Route::get('/debug/visits-count', function () {
     return response()->json(['count' => \App\Models\Visit::count(), 'sample' => $visits]);
 });
 
-// === RESCUE ROUTE (Temporary) ===
-// Gunakan ini karena SSH tidak bisa diakses
-Route::get('/setup', function() {
-    try {
-        \Illuminate\Support\Facades\Artisan::call('migrate --force');
-        \Illuminate\Support\Facades\Artisan::call('config:clear');
-        \Illuminate\Support\Facades\Artisan::call('cache:clear');
-        return "<h1>Setup Success!</h1><p>Migration & Cache Cleared.</p>";
-    } catch (\Exception $e) {
-        return "<h1>Error</h1><p>" . $e->getMessage() . "</p>";
-    }
-});
+
 
 Route::get('/', function () {
     return view('welcome');
